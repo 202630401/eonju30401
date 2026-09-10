@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Daily Outfit Slot Machine</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700&display=swap');
+
+    :root {
+      --bg-color: #fdf8f9;
+      --card-bg: #ffffff;
+      --primary-pink: #ff85a1;
+      --point-pink: #ff477e;
+      --light-pink: #fbb1bd;
+      --soft-border: #f0e6e8;
+      --text-main: #2b2d42;
+      --text-sub: #8d99ae;
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: 'Pretendard', sans-serif;
+    }
+
+    body {
+      margin: 0;
+      padding: 40px 20px;
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    /* 헤더 타이틀 */
+    header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    h1 {
+      font-size: 2.2rem;
+      font-weight: 700;
+      color: var(--text-main);
+      margin: 0 0 8px 0;
+      letter-spacing: -0.5px;
+    }
+
+    h1 span {
+      color: var(--point-pink);
+    }
+
+    header p {
+      margin: 0;
+      color: var(--text-sub);
+      font-size: 0.95rem;
+    }
+
+    /* 메인 카드 박스 */
+    .slot-card {
+      background: var(--card-bg);
+      border-radius: 28px;
+      padding: 35px;
+      box-shadow: 0 10px 30px rgba(255, 71, 126, 0.08);
+      border: 1px solid var(--soft-border);
+      max-width: 640px;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* 릴 컨테이너 */
+    .reels-container {
+      display: flex;
+      gap: 16px;
+      width: 100%;
+      margin-bottom: 25px;
+    }
+
+    .reel-item {
+      flex: 1;
+      background: #faf7f8;
+      border-radius: 20px;
+      border: 1.5px solid var(--soft-border);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      transition: border-color 0.3s;
+    }
+
+    .reel-item:hover {
+      border-color: var(--light-pink);
+    }
+
+    .reel-badge {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--point-pink);
+      padding: 10px 0;
+      width: 100%;
+      text-align: center;
+      background: #fff0f3;
+      letter-spacing: 1px;
+    }
+
+    /* 이미지 슬롯 박스 */
+    .reel-window {
+      height: 170px;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+      padding: 15px;
+    }
+
+    .reel-window img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      border-radius: 10px;
+    }
+
+    /* 상태 문구 */
+    .status-text {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: var(--point-pink);
+      margin-bottom: 20px;
+      min-height: 25px;
+      text-align: center;
+    }
+
+    /* 메인 돌리기 버튼 */
+    .spin-button {
+      background: linear-gradient(135deg, var(--primary-pink), var(--point-pink));
+      color: #ffffff;
+      border: none;
+      border-radius: 50px;
+      padding: 16px 48px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 8px 20px rgba(255, 71, 126, 0.3);
+      transition: all 0.2s ease;
+    }
+
+    .spin-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 24px rgba(255, 71, 126, 0.4);
+    }
+
+    .spin-button:active {
+      transform: translateY(1px);
+      box-shadow: 0 4px 12px rgba(255, 71, 126, 0.3);
+    }
+
+    .spin-button:disabled {
+      background: #e2e2e2;
+      box-shadow: none;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* 옷 업로드 영역 */
+    .upload-card {
+      margin-top: 25px;
+      background: var(--card-bg);
+      border-radius: 24px;
+      padding: 25px 30px;
+      border: 1px dashed var(--light-pink);
+      max-width: 640px;
+      width: 100%;
+      text-align: center;
+    }
+
+    .upload-card h3 {
+      margin: 0 0 15px 0;
+      font-size: 1.1rem;
+      color: var(--text-main);
+      font-weight: 700;
+    }
+
+    .upload-form {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    select, input[type="file"] {
+      padding: 10px 14px;
+      border-radius: 12px;
+      border: 1px solid var(--soft-border);
+      background: #faf7f8;
+      font-size: 0.9rem;
+      color: var(--text-main);
+      outline: none;
+    }
+
+    select:focus {
+      border-color: var(--primary-pink);
+    }
+
+    .upload-button {
+      background: var(--text-main);
+      color: #fff;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .upload-button:hover {
+      background: #43455c;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>TODAY'S <span>OOTD</span></h1>
+    <p>버튼을 눌러 오늘의 스타일링 조합을 찾아보세요.</p>
+  </header>
+
+  <main class="slot-card">
+    <div class="reels-container">
+      <!-- 상의 -->
+      <div class="reel-item">
+        <div class="reel-badge">TOP</div>
+        <div class="reel-window" id="reel-top">
+          <img src="https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?w=300" alt="상의">
+        </div>
+      </div>
+      <!-- 하의 -->
+      <div class="reel-item">
+        <div class="reel-badge">BOTTOM</div>
+        <div class="reel-window" id="reel-bottom">
+          <img src="https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=300" alt="하의">
+        </div>
+      </div>
+      <!-- 신발 -->
+      <div class="reel-item">
+        <div class="reel-badge">SHOES</div>
+        <div class="reel-window" id="reel-shoes">
+          <img src="https://images.unsplash.com/photo-1549298916-b41d501d3772?w=300" alt="신발">
+        </div>
+      </div>
+    </div>
+
+    <div class="status-text" id="status-text">어떤 코디가 나올까요?</div>
+
+    <button class="spin-button" id="spin-button" onclick="spin()">RANDOM SPIN</button>
+  </main>
+
+  <!-- 이미지 직접 추가하기 -->
+  <section class="upload-card">
+    <h3>나만의 옷 추가하기</h3>
+    <div class="upload-form">
+      <select id="category-select">
+        <option value="top">TOP (상의)</option>
+        <option value="bottom">BOTTOM (하의)</option>
+        <option value="shoes">SHOES (신발)</option>
+      </select>
+      <input type="file" id="image-input" accept="image/*">
+      <button class="upload-button" onclick="addCustomImage()">추가하기</button>
+    </div>
+  </section>
+
+  <script>
+    // 기본 옷 샘플 이미지들
+    const clothes = {
+      top: [
+        'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?w=300',
+        'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=300',
+        'https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=300'
+      ],
+      bottom: [
+        'https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=300',
+        'https://images.unsplash.com/photo-1584370848010-d7fe6bc767ec?w=300',
+        'https://images.unsplash.com/photo-1591195853828-11db59a44f6b?w=300'
+      ],
+      shoes: [
+        'https://images.unsplash.com/photo-1549298916-b41d501d3772?w=300',
+        'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=300',
+        'https://images.unsplash.com/photo-1525966222134-fcfa99b8ae77?w=300'
+      ]
+    };
+
+    let isSpinning = false;
+
+    function spin() {
+      if (isSpinning) return;
+      isSpinning = true;
+
+      const spinBtn = document.getElementById('spin-button');
+      const statusText = document.getElementById('status-text');
+      
+      spinBtn.disabled = true;
+      statusText.innerText = "오늘의 스타일을 매칭하고 있어요...";
+
+      const reels = [
+        { id: 'reel-top', items: clothes.top },
+        { id: 'reel-bottom', items: clothes.bottom },
+        { id: 'reel-shoes', items: clothes.shoes }
+      ];
+
+      reels.forEach((reelData, index) => {
+        const reelElem = document.getElementById(reelData.id).querySelector('img');
+        
+        // 롤링 애니메이션
+        const interval = setInterval(() => {
+          const randomIndex = Math.floor(Math.random() * reelData.items.length);
+          reelElem.src = reelData.items[randomIndex];
+        }, 80);
+
+        // 순차적으로 멈추는 효과
+        setTimeout(() => {
+          clearInterval(interval);
+          const finalIndex = Math.floor(Math.random() * reelData.items.length);
+          reelElem.src = reelData.items[finalIndex];
+
+          if (index === reels.length - 1) {
+            isSpinning = false;
+            spinBtn.disabled = false;
+            statusText.innerText = "✨ 오늘의 OOTD 매칭 완성!";
+          }
+        }, 1200 + (index * 400));
+      });
+    }
+
+    function addCustomImage() {
+      const category = document.getElementById('category-select').value;
+      const fileInput = document.getElementById('image-input');
+      const file = fileInput.files[0];
+
+      if (!file) {
+        alert("업로드할 옷 이미지 파일을 선택해 주세요.");
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        clothes[category].push(e.target.result);
+        alert("옷장에 이미지가 등록되었습니다!");
+        fileInput.value = "";
+      };
+      reader.readAsDataURL(file);
+    }
+  </script>
+</body>
+</html>
