@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="ko" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>쉼표 (Comma) - 스마트폰 중독 & 위험 위치 안전 제어</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0fdfa',
+                            100: '#ccfbf1',
+                            400: '#2dd4bf',
+                            500: '#14b8a6',
+                            600: '#0d9488',
+                            700: '#0f766e',
+                            900: '#134e4a',
+                        }
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'breath': 'breath 4s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        breath: {
+                            '0%, 100%': { transform: 'scale(1)', opacity: '0.8' },
+                            '50%': { transform: 'scale(1.08)', opacity: '0.3' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Inter Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+        /* Custom scrollbar for clean aesthetic */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(156, 163, 175, 0.3); border-radius: 9999px; }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen flex flex-col transition-colors duration-300">
+
+    <!-- App Header -->
+    <header class="sticky top-0 z-40 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200/60 dark:border-slate-800 transition-colors duration-300">
+        <div class="max-w-md mx-auto px-4 py-3 flex items-center justify-between">
+            <!-- Branding -->
+            <div class="flex items-center gap-2">
+                <div class="w-9 h-9 rounded-2xl bg-teal-500 flex items-center justify-center text-white font-black text-2xl shadow-lg shadow-teal-500/30">
+                    ,
+                </div>
+                <div>
+                    <h1 class="font-black text-lg tracking-tight leading-none text-slate-900 dark:text-white">쉼표 <span class="text-teal-500 text-xs font-semibold">Comma</span></h1>
+                    <p class="text-[10px] text-slate-400 font-medium">스몸비 & 스마트폰 중독 방지</p>
+                </div>
+            </div>
+
+            <!-- Header Actions -->
+            <div class="flex items-center gap-2">
+                <!-- GPS Active Badge -->
+                <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-teal-50 dark:bg-teal-950/60 border border-teal-200 dark:border-teal-800/60 text-teal-700 dark:text-teal-300 text-[11px] font-semibold">
+                    <span class="w-2 h-2 rounded-full bg-teal-500 animate-pulse"></span>
+                    <span>GPS 상시 감지</span>
+                </div>
+
+                <!-- Theme Toggle Button -->
+                <button id="themeToggleBtn" aria-label="테마 변경" class="w-9 h-9 rounded-2xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center text-slate-600 dark:text-slate-300 transition">
+                    <i data-lucide="moon" id="themeIcon" class="w-4 h-4"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="max-w-md mx-auto w-full px-4 py-4 flex-1 flex flex-col gap-4">
+
+        <!-- Top Streak & Stat Dashboard Card -->
+        <section class="bg-gradient-to-r from-amber-500/10 via-teal-500/10 to-emerald-500/10 dark:from-amber-500/20 dark:via-teal-500/20 dark:to-emerald-500/20 rounded-3xl p-4 border border-teal-200/50 dark:border-teal-800/50 shadow-sm flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-11 h-11 rounded-2xl bg-amber-500 text-white flex items-center justify-center font-black shadow-md shadow-amber-500/20">
+                    <i data-lucide="award" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <div class="flex items-center gap-1.5">
+                        <span id="streakCountText" class="font-black text-base text-slate-800 dark:text-slate-100">0일 연속</span>
+                        <span class="text-[10px] bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 font-bold px-2 py-0.5 rounded-full">성공 도장</span>
+                    </div>
+                    <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">매일 잠금을 완료하고 도장을 받으세요!</p>
+                </div>
+            </div>
+            <!-- Dynamic Stamp Badge Container -->
+            <div id="stampBadgeContainer" class="flex items-center -space-x-1">
+                <div class="w-7 h-7 rounded-full bg-teal-500 text-white font-black text-xs flex items-center justify-center border-2 border-white dark:border-slate-900 shadow-sm">,</div>
+            </div>
+        </section>
+
+        <!-- Active Timer Info Banner (Visible while screen time timer is active) -->
+        <section id="activeTimerCard" class="hidden bg-gradient-to-br from-teal-600 to-teal-800 text-white rounded-3xl p-5 shadow-lg relative overflow-hidden transition-all duration-300">
+            <div class="flex items-center justify-between mb-3">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="timer" class="w-5 h-5 text-teal-200"></i>
+                    <span class="font-bold text-xs text-teal-100">현재 사용 가능 남은 시간</span>
+                </div>
+                <button id="cancelTimerBtn" class="text-[11px] bg-teal-900/60 hover:bg-teal-900 text-teal-200 px-2.5 py-1 rounded-xl font-medium transition">
+                    설정 취소
+                </button>
+            </div>
+            <div class="text-center py-2">
+                <span id="usageTimerCountdown" class="text-4xl font-extrabold font-mono tracking-tight text-white">00:00:00</span>
+                <p class="text-xs text-teal-200 mt-1">시간이 만료되면 설정한 시간 동안 스크린이 잠깁니다.</p>
+            </div>
+        </section>
+
+        <!-- Setup Card Container (Hidden when lockout is active) -->
+        <div id="setupSection" class="space-y-4">
+
+            <!-- STEP 1: Smartphone Usage Time Setup -->
+            <section class="bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-100 dark:border-slate-800 shadow-sm space-y-4 transition-colors duration-300">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <span class="w-6 h-6 rounded-xl bg-teal-100 dark:bg-teal-900/60 text-teal-700 dark:text-teal-300 font-extrabold text-xs flex items-center justify-center">1</span>
+                        <h2 class="font-bold text-slate-800 dark:text-slate-100 text-sm">스마트폰 사용할 시간 설정</h2>
+                    </div>
+                    <span id="usageTimeDisplay" class="font-extrabold text-teal-600 dark:text-teal-400 text-base">30분</span>
+                </div>
+
+                <!-- Range Slider -->
+                <input type="range" id="usageTimeSlider" min="1" max="180" step="1" value="30" class="w-full h-2 bg-slate-200 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer accent-teal-500">
+
+                <!-- Quick Presets -->
+                <div class="grid grid-cols-4 gap-2">
+                    <button class="preset-usage-btn py-1.5 px-2 bg-slate-100 dark:bg-slate-800 hover:bg-teal-500 hover:text-white dark:hover:bg-teal-600 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 transition" data-minutes="10">+10분</button>
+                    <button class="preset-usage-btn py-1.5 px-2 bg-slate-100 dark:bg-slate-800 hover:bg-teal-500 hover:text-white dark:hover:bg-teal-600 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 transition" data-minutes="30">30분</button>
+                    <button class="preset-usage-btn py-1.5 px-2 bg-slate-100 dark:bg-slate-800 hover:bg-teal-500 hover:text-white dark:hover:bg-teal-600 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 transition" data-minutes="60">1시간</button>
+                    <button class="preset-usage-btn py-1.5 px-2 bg-slate-100 dark:bg-slate-800 hover:bg-teal-500 hover:text-white dark:hover:bg-teal-600 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 transition" data-minutes="120">2시간</button>
+                </div>
+            </section>
+
+            <!-- STEP 2: Lockout Duration Setup -->
+            <section class="bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-100 dark:border-slate-800 shadow-sm space-y-4 transition-colors duration-300">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <span class="w-6 h-6 rounded-xl bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 font-extrabold text-xs flex items-center justify-center">2</span>
+                        <h2 class="font-bold text-slate-800 dark:text-slate-100 text-sm">사용 후 잠글 시간 설정</h2>
+                    </div>
+                    <span id="lockTimeDisplay" class="font-extrabold text-indigo-600 dark:text-indigo-400 text-base">60분</span>
+                </div>
+
+                <!-- Range Slider -->
+                <input type="range" id="lockTimeSlider" min="10" max="720" step="10" value="60" class="w-full h-2 bg-slate-200 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500">
+
+                <!-- Quick Presets -->
+                <div class="grid grid-cols-4 gap-2">
+                    <button class="preset-lock-btn py-1.5 px-2 bg-slate-100 dark:bg-slate-800 hover:bg-indigo-500 hover:text-white dark:hover:bg-indigo-600 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 transition" data-minutes="30">30분</button>
+                    <button class="preset-lock-btn py-1.5 px-2 bg-slate-100 dark:bg-slate-800 hover:bg-indigo-500 hover:text-white dark:hover:bg-indigo-600 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 transition" data-minutes="60">1시간</button>
+                    <button class="preset-lock-btn py-1.5 px-2 bg-slate-100 dark:bg-slate-800 hover:bg-indigo-500 hover:text-white dark:hover:bg-indigo-600 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 transition" data-minutes="180">3시간</button>
+                    <button class="preset-lock-btn py-1.5 px-2 bg-slate-100 dark:bg-slate-800 hover:bg-indigo-500 hover:text-white dark:hover:bg-indigo-600 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 transition" data-minutes="480">내일 아침</button>
+                </div>
+            </section>
+
+            <!-- Main Action Start Button -->
+            <button id="startServiceBtn" class="w-full py-4 bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700 text-white font-extrabold rounded-3xl shadow-lg shadow-teal-500/25 flex items-center justify-center gap-2 text-base transition-all duration-200 active:scale-[0.98]">
+                <i data-lucide="play" class="w-5 h-5 fill-current"></i>
+                쉼표 시작하기 (타이머 작동)
+            </button>
+        </div>
+
+        <!-- Real-time Location Hazard Detector Card -->
+        <section class="bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-100 dark:border-slate-800 shadow-sm space-y-3 transition-colors duration-300">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="shield-alert" class="w-5 h-5 text-red-500"></i>
+                    <h3 class="font-bold text-slate-800 dark:text-slate-100 text-sm">보행 중 위험 위치 알림 시뮬레이터</h3>
+                </div>
+                <span class="text-[10px] text-red-500 bg-red-50 dark:bg-red-950/80 px-2 py-0.5 rounded-full font-bold">상시 감지 중</span>
+            </div>
+
+            <p class="text-xs text-slate-500 dark:text-slate-400">
+                보행 중 위험 구역(공사장, 호수, 위험 교차로) 근처에서 휴대폰을 사용하고 있으면 강력한 소리 및 진동 알림이 터집니다.
+            </p>
+
+            <!-- Test Hazard Simulation Button -->
+            <button id="triggerTestAlarmBtn" class="w-full py-3 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/60 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/60 rounded-2xl font-bold text-xs flex items-center justify-center gap-2 transition">
+                <i data-lucide="bell-ring" class="w-4 h-4 animate-bounce"></i>
+                위험 지역 접근 알림 시뮬레이션 테스트
+            </button>
+        </section>
+
+        <!-- User Safety Report Card -->
+        <section class="bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-100 dark:border-slate-800 shadow-sm transition-colors duration-300">
+            <div class="flex items-center justify-between mb-3">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="bar-chart-2" class="w-5 h-5 text-teal-600 dark:text-teal-400"></i>
+                    <h3 class="font-bold text-slate-800 dark:text-slate-100 text-sm">사용 안전 리포트</h3>
+                </div>
+                <span class="text-[10px] text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">누적 기록</span>
+            </div>
+
+            <div class="grid grid-cols-3 gap-2 text-center">
+                <div class="p-3 bg-slate-50 dark:bg-slate-950 rounded-2xl border border-slate-100 dark:border-slate-800">
+                    <span id="reportDangerTriggers" class="text-base font-extrabold text-red-500 block">0회</span>
+                    <span class="text-[10px] text-slate-400 dark:text-slate-500">위험 감지</span>
+                </div>
+                <div class="p-3 bg-slate-50 dark:bg-slate-950 rounded-2xl border border-slate-100 dark:border-slate-800">
+                    <span id="reportCompletedSessions" class="text-base font-extrabold text-teal-600 dark:text-teal-400 block">0회</span>
+                    <span class="text-[10px] text-slate-400 dark:text-slate-500">휴식 성공</span>
+                </div>
+                <div class="p-3 bg-slate-50 dark:bg-slate-950 rounded-2xl border border-slate-100 dark:border-slate-800">
+                    <span id="reportTotalLockMinutes" class="text-base font-extrabold text-indigo-500 block">0분</span>
+                    <span class="text-[10px] text-slate-400 dark:text-slate-500">총 휴식 시간</span>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- SCREEN TIME LOCKOUT FULLSCREEN OVERLAY -->
+    <div id="lockoutOverlay" class="fixed inset-0 z-50 hidden bg-slate-950 text-white flex-col justify-between p-6 overflow-hidden select-none">
+        
+        <!-- Lockout Header -->
+        <div class="flex items-center justify-between text-slate-400 text-xs">
+            <div class="flex items-center gap-1.5">
+                <div class="w-2 h-2 rounded-full bg-teal-400 animate-ping"></div>
+                <span class="font-bold text-teal-400">쉼표 화면 잠금 모드</span>
+            </div>
+            <span class="text-[10px] bg-slate-900 px-2.5 py-1 rounded-full border border-slate-800">Screen Time Active</span>
+        </div>
+
+        <!-- Center Animation & Timer Display -->
+        <div class="my-auto flex flex-col items-center text-center space-y-6">
+            <div class="relative w-40 h-40 flex items-center justify-center">
+                <div class="absolute inset-0 rounded-full bg-teal-500/20 animate-breath"></div>
+                <div class="absolute inset-3 rounded-full bg-teal-600/30 animate-breath" style="animation-delay: 0.5s;"></div>
+                <div class="relative z-10 flex flex-col items-center">
+                    <i data-lucide="coffee" class="w-7 h-7 text-teal-300 mb-1"></i>
+                    <p class="text-[11px] text-teal-200 font-medium">잠금 해제까지</p>
+                    <span id="lockoutCountdown" class="text-2xl font-black font-mono text-white mt-0.5">
+                        00:00:00
+                    </span>
+                </div>
+            </div>
+
+            <!-- Alternative Activity Suggestion Box -->
+            <div class="max-w-xs w-full bg-slate-900/90 border border-slate-800 rounded-3xl p-4 text-left relative shadow-xl">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-[10px] font-bold tracking-wider text-teal-400 uppercase bg-teal-950 px-2 py-0.5 rounded-md border border-teal-800">
+                        🌱 휴식 대체 활동
+                    </span>
+                    <button id="nextActivityBtn" class="text-xs text-slate-400 hover:text-white flex items-center gap-1 bg-slate-800 px-2 py-1 rounded-xl transition">
+                        <i data-lucide="refresh-cw" class="w-3 h-3"></i>
+                        다른 활동
+                    </button>
+                </div>
+                <div class="flex items-start gap-3">
+                    <div id="activityIconBox" class="p-2.5 bg-teal-500/20 text-teal-300 rounded-2xl flex-shrink-0 mt-0.5">
+                        <i data-lucide="activity" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h4 id="activityTitle" class="font-bold text-sm text-white">몸 가볍게 풀기</h4>
+                        <p id="activityText" class="text-xs text-slate-300 mt-1 leading-relaxed">목과 어깨를 천천히 돌리고 스트레칭을 3회 해보세요.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mindful Quote -->
+            <div class="max-w-xs px-2">
+                <blockquote id="lockoutQuote" class="text-xs font-medium text-slate-400 italic leading-relaxed">
+                    "잠시 스마트폰을 내려놓고 고개를 들어 주변의 풍경을 바라보세요."
+                </blockquote>
+            </div>
+        </div>
+
+        <!-- Emergency Buttons -->
+        <div class="space-y-2.5 max-w-xs mx-auto w-full">
+            <a href="tel:112" class="w-full py-2.5 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 font-medium rounded-2xl text-xs flex items-center justify-center gap-2 transition">
+                <i data-lucide="phone-call" class="w-3.5 h-3.5 text-red-400"></i>
+                긴급 전화 (112 / Emergency)
+            </a>
+            <button id="emergencyUnlockBtn" class="w-full py-1.5 text-slate-500 hover:text-slate-400 text-[11px] font-medium transition text-center underline">
+                비상 잠금 해제 (시뮬레이션 끝내기)
+            </button>
+        </div>
+    </div>
+
+    <!-- HIGH PRIORITY DANGER ALERT MODAL -->
+    <div id="dangerModal" class="fixed inset-0 z-50 hidden bg-red-950/90 backdrop-blur-md text-white flex-col items-center justify-center p-6 text-center select-none">
+        <div class="w-20 h-20 rounded-full bg-red-600/30 border-4 border-red-500 flex items-center justify-center mb-4 animate-bounce">
+            <i data-lucide="alert-triangle" class="w-10 h-10 text-red-400"></i>
+        </div>
+        <h2 class="text-2xl font-black text-white mb-2">🚨 위험 구역 감지!</h2>
+        <p class="text-sm text-red-200 mb-1">스마트폰을 시선에서 떼고 걸어가세요.</p>
+        <p id="dangerLocationName" class="text-xs font-bold text-amber-300 bg-red-900/60 px-3 py-1 rounded-full mb-6">
+            시청 앞 공사 구역 근처 (보행 위험)
+        </p>
+
+        <button id="dismissDangerBtn" class="w-full max-w-xs py-4 bg-white hover:bg-slate-100 text-red-600 font-black rounded-3xl shadow-2xl text-base transition active:scale-95">
+            확인했습니다 (알림 끄기)
+        </button>
+    </div>
+
+    <!-- Application Logic Script -->
+    <script>
+        // Application State
+        const state = {
+            usageMinutes: 30,
+            lockMinutes: 60,
+            isTimerActive: false,
+            isLocked: false,
+            usageTimerId: null,
+            lockoutTimerId: null,
+            usageSecondsLeft: 0,
+            lockoutSecondsLeft: 0,
+            audioCtx: null,
+            alarmInterval: null,
+            currentActivityIndex: 0,
+            stats: {
+                streakCount: 0,
+                lastSuccessDate: null,
+                dangerTriggers: 0,
+                totalLockMinutes: 0,
+                completedSessions: 0
+            }
+        };
+
+        const AlternativeActivities = [
+            { title: "몸 가볍게 풀기", text: "목과 어깨를 천천히 돌리고 스트레칭을 3회 해보세요.", icon: "activity" },
+            { title: "시야 넓히기", text: "스마트폰에서 눈을 떼고 멀리 있는 창밖 풍경을 10초간 바라보세요.", icon: "eye" },
+            { title: "수분 충전하기", text: "시원한 물 한 잔을 천천히 마시며 몸을 리프레시하세요.", icon: "droplet" },
+            { title: "감사 한 줄 생각", text: "오늘 하루 중 소소하게 감사했던 일 1가지를 떠올려보세요.", icon: "heart" },
+            { title: "마음 다스리기", text: "눈을 감고 깊게 호흡을 3번 마시고 내쉬어보세요.", icon: "wind" }
+        ];
+
+        const Quotes = [
+            "잠시 스마트폰을 내려놓고 고개를 들어 주변의 풍경을 바라보세요.",
+            "지금 이 순간의 눈앞 현실이 화면 속 세상보다 훨씬 소중합니다.",
+            "깊은 숨을 마시고 내쉬어보세요. 뇌에 휴식을 줄 시간입니다.",
+            "디지털 세계에서 벗어나 나 자신과의 대화를 나누어보세요.",
+            "휴식은 더 멀리 나아가기 위한 준비 과정입니다."
+        ];
+
+        // Elements
+        const themeToggleBtn = document.getElementById('themeToggleBtn');
+        const themeIcon = document.getElementById('themeIcon');
+        const usageTimeSlider = document.getElementById('usageTimeSlider');
+        const usageTimeDisplay = document.getElementById('usageTimeDisplay');
+        const lockTimeSlider = document.getElementById('lockTimeSlider');
+        const lockTimeDisplay = document.getElementById('lockTimeDisplay');
+        const startServiceBtn = document.getElementById('startServiceBtn');
+        const activeTimerCard = document.getElementById('activeTimerCard');
+        const setupSection = document.getElementById('setupSection');
+        const usageTimerCountdown = document.getElementById('usageTimerCountdown');
+        const cancelTimerBtn = document.getElementById('cancelTimerBtn');
+        const lockoutOverlay = document.getElementById('lockoutOverlay');
+        const lockoutCountdown = document.getElementById('lockoutCountdown');
+        const emergencyUnlockBtn = document.getElementById('emergencyUnlockBtn');
+        const triggerTestAlarmBtn = document.getElementById('triggerTestAlarmBtn');
+        const dangerModal = document.getElementById('dangerModal');
+        const dismissDangerBtn = document.getElementById('dismissDangerBtn');
+
+        // Theme Toggle Handler
+        themeToggleBtn.addEventListener('click', () => {
+            document.documentElement.classList.toggle('dark');
+            const isDark = document.documentElement.classList.contains('dark');
+            themeIcon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
+            lucide.createIcons();
+        });
+
+        // Time Formatting Helper
+        function formatTime(seconds) {
+            const h = Math.floor(seconds / 3600);
+            const m = Math.floor((seconds % 3600) / 60);
+            const s = seconds % 60;
+            return [h, m, s].map(v => v < 10 ? '0' + v : v).join(':');
+        }
+
+        // STEP 1 Slider Update
+        usageTimeSlider.addEventListener('input', (e) => {
+            state.usageMinutes = parseInt(e.target.value);
+            usageTimeDisplay.innerText = state.usageMinutes >= 60 
+                ? `${Math.floor(state.usageMinutes / 60)}시간 ${state.usageMinutes % 60}분` 
+                : `${state.usageMinutes}분`;
+        });
+
+        document.querySelectorAll('.preset-usage-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                state.usageMinutes = parseInt(btn.dataset.minutes);
+                usageTimeSlider.value = state.usageMinutes;
+                usageTimeDisplay.innerText = state.usageMinutes >= 60 
+                    ? `${Math.floor(state.usageMinutes / 60)}시간 ${state.usageMinutes % 60}분` 
+                    : `${state.usageMinutes}분`;
+            });
+        });
+
+        // STEP 2 Slider Update
+        lockTimeSlider.addEventListener('input', (e) => {
+            state.lockMinutes = parseInt(e.target.value);
+            lockTimeDisplay.innerText = state.lockMinutes >= 60 
+                ? `${Math.floor(state.lockMinutes / 60)}시간 ${state.lockMinutes % 60}분` 
+                : `${state.lockMinutes}분`;
+        });
+
+        document.querySelectorAll('.preset-lock-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                state.lockMinutes = parseInt(btn.dataset.minutes);
+                lockTimeSlider.value = state.lockMinutes;
+                lockTimeDisplay.innerText = state.lockMinutes >= 60 
+                    ? `${Math.floor(state.lockMinutes / 60)}시간 ${state.lockMinutes % 60}분` 
+                    : `${state.lockMinutes}분`;
+            });
+        });
+
+        // Start Screen Time Timer
+        startServiceBtn.addEventListener('click', () => {
+            state.isTimerActive = true;
+            state.usageSecondsLeft = state.usageMinutes * 60;
+
+            setupSection.classList.add('hidden');
+            activeTimerCard.classList.remove('hidden');
+
+            usageTimerCountdown.innerText = formatTime(state.usageSecondsLeft);
+
+            if (state.usageTimerId) clearInterval(state.usageTimerId);
+            state.usageTimerId = setInterval(() => {
+                state.usageSecondsLeft--;
+                usageTimerCountdown.innerText = formatTime(state.usageSecondsLeft);
+
+                if (state.usageSecondsLeft <= 0) {
+                    clearInterval(state.usageTimerId);
+                    triggerLockoutMode();
+                }
+            }, 1000);
+        });
+
+        cancelTimerBtn.addEventListener('click', () => {
+            if (state.usageTimerId) clearInterval(state.usageTimerId);
+            state.isTimerActive = false;
+            activeTimerCard.classList.add('hidden');
+            setupSection.classList.remove('hidden');
+        });
+
+        // Alternative Activity Rotator
+        function showAlternativeActivity(index = 0) {
+            state.currentActivityIndex = index % AlternativeActivities.length;
+            const act = AlternativeActivities[state.currentActivityIndex];
+            
+            document.getElementById('activityTitle').innerText = act.title;
+            document.getElementById('activityText').innerText = act.text;
+            
+            const iconBox = document.getElementById('activityIconBox');
+            iconBox.innerHTML = `<i data-lucide="${act.icon}" class="w-5 h-5"></i>`;
+            lucide.createIcons();
+        }
+
+        document.getElementById('nextActivityBtn').addEventListener('click', () => {
+            showAlternativeActivity(state.currentActivityIndex + 1);
+        });
+
+        // Lockout Screen Time Mode
+        function triggerLockoutMode() {
+            state.isLocked = true;
+            state.lockoutSecondsLeft = state.lockMinutes * 60;
+
+            showAlternativeActivity(Math.floor(Math.random() * AlternativeActivities.length));
+            const randomQuote = Quotes[Math.floor(Math.random() * Quotes.length)];
+            document.getElementById('lockoutQuote').innerText = `"${randomQuote}"`;
+
+            lockoutOverlay.classList.remove('hidden');
+            lockoutOverlay.classList.add('flex');
+
+            lockoutCountdown.innerText = formatTime(state.lockoutSecondsLeft);
+
+            if (state.lockoutTimerId) clearInterval(state.lockoutTimerId);
+            state.lockoutTimerId = setInterval(() => {
+                state.lockoutSecondsLeft--;
+                lockoutCountdown.innerText = formatTime(state.lockoutSecondsLeft);
+
+                if (state.lockoutSecondsLeft <= 0) {
+                    clearInterval(state.lockoutTimerId);
+                    recordLockSuccess();
+                    unlockLockoutMode();
+                }
+            }, 1000);
+        }
+
+        function unlockLockoutMode() {
+            state.isLocked = false;
+            lockoutOverlay.classList.add('hidden');
+            lockoutOverlay.classList.remove('flex');
+            activeTimerCard.classList.add('hidden');
+            setupSection.classList.remove('hidden');
+        }
+
+        emergencyUnlockBtn.addEventListener('click', () => {
+            if (state.lockoutTimerId) clearInterval(state.lockoutTimerId);
+            unlockLockoutMode();
+        });
+
+        // Alarm Audio Generator
+        function playWarningSound() {
+            try {
+                if (!state.audioCtx) {
+                    state.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                const osc = state.audioCtx.createOscillator();
+                const gain = state.audioCtx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(880, state.audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(440, state.audioCtx.currentTime + 0.3);
+                gain.gain.setValueAtTime(0.3, state.audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, state.audioCtx.currentTime + 0.3);
+                osc.connect(gain);
+                gain.connect(state.audioCtx.destination);
+                osc.start();
+                osc.stop(state.audioCtx.currentTime + 0.3);
+            } catch (e) {
+                console.log('Audio Context restricted');
+            }
+        }
+
+        function startDangerAlert(locationName = "위험 지역") {
+            state.stats.dangerTriggers++;
+            saveStats();
+            updateReportUI();
+
+            document.getElementById('dangerLocationName').innerText = locationName;
+            dangerModal.classList.remove('hidden');
+            dangerModal.classList.add('flex');
+
+            if ('vibrate' in navigator) {
+                navigator.vibrate([300, 100, 300, 100, 500]);
+            }
+
+            playWarningSound();
+            if (state.alarmInterval) clearInterval(state.alarmInterval);
+            state.alarmInterval = setInterval(() => {
+                playWarningSound();
+                if ('vibrate' in navigator) {
+                    navigator.vibrate([200, 100, 200]);
+                }
+            }, 800);
+        }
+
+        function stopDangerAlert() {
+            if (state.alarmInterval) clearInterval(state.alarmInterval);
+            dangerModal.classList.add('hidden');
+            dangerModal.classList.remove('flex');
+        }
+
+        triggerTestAlarmBtn.addEventListener('click', () => {
+            startDangerAlert("시청 앞 위험 공사 구역 (시뮬레이션)");
+        });
+
+        dismissDangerBtn.addEventListener('click', () => {
+            stopDangerAlert();
+        });
+
+        // LocalStorage Stats
+        function loadStats() {
+            const stored = localStorage.getItem('comma_app_stats');
+            if (stored) {
+                try {
+                    state.stats = { ...state.stats, ...JSON.parse(stored) };
+                } catch(e) {}
+            }
+            updateReportUI();
+            updateStreakUI();
+        }
+
+        function saveStats() {
+            localStorage.setItem('comma_app_stats', JSON.stringify(state.stats));
+        }
+
+        function updateReportUI() {
+            document.getElementById('reportDangerTriggers').innerText = `${state.stats.dangerTriggers}회`;
+            document.getElementById('reportCompletedSessions').innerText = `${state.stats.completedSessions}회`;
+            document.getElementById('reportTotalLockMinutes').innerText = `${state.stats.totalLockMinutes}분`;
+        }
+
+        function updateStreakUI() {
+            document.getElementById('streakCountText').innerText = `${state.stats.streakCount}일 연속`;
+            const container = document.getElementById('stampBadgeContainer');
+            container.innerHTML = '';
+
+            const stampsToShow = Math.min(5, Math.max(1, state.stats.streakCount || 1));
+            for (let i = 0; i < stampsToShow; i++) {
+                const badge = document.createElement('div');
+                badge.className = "w-7 h-7 rounded-full bg-teal-500 text-white font-black text-xs flex items-center justify-center border-2 border-white dark:border-slate-900 shadow-sm";
+                badge.innerText = ",";
+                container.appendChild(badge);
+            }
+        }
+
+        function recordLockSuccess() {
+            const todayStr = new Date().toISOString().split('T')[0];
+            if (state.stats.lastSuccessDate !== todayStr) {
+                state.stats.streakCount = (state.stats.streakCount || 0) + 1;
+                state.stats.lastSuccessDate = todayStr;
+            }
+            state.stats.completedSessions = (state.stats.completedSessions || 0) + 1;
+            state.stats.totalLockMinutes = (state.stats.totalLockMinutes || 0) + state.lockMinutes;
+            
+            saveStats();
+            updateReportUI();
+            updateStreakUI();
+        }
+
+        // Initialize Icons & App Data on Load
+        window.addEventListener('load', () => {
+            lucide.createIcons();
+            loadStats();
+        });
+    </script>
+</body>
+</html>
